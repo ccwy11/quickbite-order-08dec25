@@ -1,0 +1,30 @@
+{
+  "weeklyMenu": {
+    "Monday": [
+      { "id": "biryani", "name": "Chicken Biryani", "price": 480 },
+      { "id": "kebab", "name": "Seekh Kebab (6pcs)", "price": 350 },
+      { "id": "raita", "name": "Raita", "price": 50 }
+    ],
+    "Tuesday": [
+      { "id": "biryani", "name": "Chicken Biryani", "price": 480 },
+      { "id": "kebab", "name": "Seekh Kebab (6pcs)", "price": 350 },
+      { "id": "raita", "name": "Raita", "price": 50 }
+    ],
+    "Wednesday": [
+      { "id": "biryani", "name": "Chicken Biryani", "price": 480 },
+      { "id": "kebab", "name": "Seekh Kebab (6pcs)", "price": 350 },
+      { "id": "raita", "name": "Raita", "price": 50 }
+    ],
+    "Thursday" : [
+      { "id": "biryani", "name": "Chicken Biryani", "price": 480 },
+      { "id": "kebab", "name": "Seekh Kebab (6pcs)", "price": 350 },
+      { "id": "raita", "name": "Raita", "price": 50 }
+    ],
+    "Friday":         [{ "id": "biryani", "name": "Chicken Biryani", "price": 480 }],
+    "Saturday":       [{ "id": "mutton", "name": "Mutton Biryani", "price": 780 }],
+    "Sunday": [
+      { "id": "haleem", "name": "Chicken Haleem (Special)", "price": 480 },
+      { "id": "pulao", "name": "Mutton Pulao", "price": 720 }
+    ]
+  }
+}

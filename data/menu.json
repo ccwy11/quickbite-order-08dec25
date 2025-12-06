@@ -1,0 +1,11 @@
+{
+  "month": "December 2025",
+  "items": [
+    { "id": "biryani", "name": "Chicken Biryani", "price": 480, "available": true },
+    { "id": "mutton", "name": "Mutton Biryani", "price": 750, "available": true },
+    { "id": "kebab", "name": "Seekh Kebab (6pcs)", "price": 350, "available": true },
+    { "id": "nihari", "name": "Beef Nihari", "price": 550, "available": false },
+    { "id": "haleem", "name": "Chicken Haleem", "price": 420, "available": true },
+    { "id": "karahi", "name": "Chicken Karahi", "price": 650, "available": true }
+  ]
+}
