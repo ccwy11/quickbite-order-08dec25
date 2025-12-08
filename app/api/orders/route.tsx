@@ -71,7 +71,8 @@ const { data, error } = await resend.emails.send({
     to: ['delivered@resend.dev'],
       // from: "Kitchen Orders <onboarding@resend.dev>",  // Swap to your verified domain later
       // to: [phone || "you@gmail.com"],  // Send to customer's phone-as-email or your admin
-     subject: `New Weekly Order #${newOrder.id} – Rs.${totalAmount}`,
+  subject: `New Weekly Order #${newOrder.id} – Rs.${totalAmount}`,
+     //@ts-ignore
       react: <OrderSummary order={newOrder} />,  // Your component here
     });
 
