@@ -1,10 +1,12 @@
-import { db } from "@/db/drizzle";
+import { getDb } from "@/db/drizzle";
 import { orders } from "@/db/schema";
 import { format } from "date-fns";
 
 export const revalidate = 0;  // Real-time refresh
 
 export default async function AdminPage() {
+  // Lazy DB connection – only runs at request time (not build time)
+  const db = getDb();
   const allOrders = await db.select().from(orders).orderBy(orders.createdAt);
 
   return (
@@ -41,4 +43,3 @@ export default async function AdminPage() {
     </div>
   );
 }
-//vercel push test

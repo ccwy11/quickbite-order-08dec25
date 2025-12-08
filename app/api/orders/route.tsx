@@ -1,15 +1,12 @@
 
 import { orders } from "@/db/schema";
 import { NextRequest, NextResponse } from "next/server";          
-import { Resend } from "resend";
-
 import { format } from "date-fns";
-import { db } from "@/db/drizzle";
-import OrderSummary from "@/server/emails/OrderSummary";
+import {  getDb } from "@/db/drizzle";
 import { render } from "@react-email/components";
+import OrderSummary from "@/server/emails/OrderSummary";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
+export const dynamic = 'force-dynamic'
 // src/app/api/orders/route.ts
 
 
@@ -26,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (!orderList || !Array.isArray(orderList) || orderList.length === 0) {
     return Response.json({ error: "No orders submitted" }, { status: 400 });
   }
-
+const drizzleDb = getDb();
   // 3. Validate dates
   for (const order of orderList) {
     const date = new Date(order.deliveryDate);
@@ -37,7 +34,8 @@ export async function POST(req: NextRequest) {
 
   // 4. Pick first valid date as week reference (safe now)
   const weekStartDate = new Date(orderList[0].deliveryDate);
-
+  // Lazy DB (your existing fix)
+  const db = getDb();
   // 5. Insert the weekly batch
   const [newOrder] = await db
     .insert(orders)
@@ -64,25 +62,40 @@ export async function POST(req: NextRequest) {
     .returning();
 
   // 6. Send email
-// Send confirmation email (Resend magic)
-const { data, error } = await resend.emails.send({
+  // Send confirmation email (Resend magic)
+  
 
-   from: 'Acme <onboarding@resend.dev>',
-    to: ['delivered@resend.dev'],
-      // from: "Kitchen Orders <onboarding@resend.dev>",  // Swap to your verified domain later
-      // to: [phone || "you@gmail.com"],  // Send to customer's phone-as-email or your admin
-  subject: `New Weekly Order #${newOrder.id} – Rs.${totalAmount}`,
-     //@ts-ignore
-      react: <OrderSummary order={newOrder} />,  // Your component here
+// LAZY RESEND – Only init here (runtime, after env loaded)
+if (process.env.RESEND_API_KEY) {
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    const { data, error } = await resend.emails.send({
+      from: "Kitchen Orders <onboarding@resend.dev>",
+      to: ["you@gmail.com"], // Replace with your real email
+      subject: `New Weekly Order #${newOrder.id} – Rs.${totalAmount}`,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      react: <OrderSummary order={newOrder} />,
     });
 
     if (error) {
-      console.error("Resend error:", error);  // Log for debug, but don't crash order
+      console.error("Resend email failed:", error);
     } else {
-      console.log("Email sent:", data?.id);  // Success log
+      console.log("Email sent successfully:", data?.id);
     }
 
-    return NextResponse.json({ success: true, order: newOrder });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    // This catches import errors, auth errors, network issues, etc.
+    console.error("Failed to send email via Resend:", err.message || err);
+    // Optional: Send fallback via Telegram if you have it
+    // await sendTelegramFallback(newOrder);
+  }
+} else {
+  console.warn("RESEND_API_KEY not set – email skipped");
+}
 
   } 
   
