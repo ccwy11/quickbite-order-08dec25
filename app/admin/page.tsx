@@ -27,8 +27,9 @@ export default async function AdminPage() {
                   </span>
                 </div>
                 <p className="text-gray-600 mb-2">Week starting: {format(new Date(order.deliveryWeek), "PPP")}</p>
-                <p className="font-medium mb-2">Phone: {order.phone}</p>
-                {order.notes && <p className="italic text-gray-500 mb-4">Notes: "{order.notes}"</p>}
+                    <p className="font-medium mb-2">Phone: {order.phone}</p>
+                
+                {order.notes && <p className="italic text-gray-500 mb-4">Notes: &rdquo;{order.notes}&rdquo;</p>}
                 <div className="border-t pt-4">
                   <p className="text-2xl font-bold text-green-600">Total: Rs.{order.totalAmount}</p>
                 </div>
