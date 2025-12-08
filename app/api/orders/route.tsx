@@ -2,7 +2,6 @@
 
 import { getDb } from "@/db/drizzle";
 import { orders } from "@/db/schema";
-import OrderSummary from "@/server/emails/OrderSummary";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -70,10 +69,17 @@ export async function POST(req: NextRequest) {
       try {
         const { Resend } = await import("resend");
         const resend = new Resend(process.env.RESEND_API_KEY);
+        // Dynamic import of the template — skips build time!
+        const OrderSummary = (await import("@/server/emails/OrderSummary")).default;
 
         const { data, error } = await resend.emails.send({
-          from: "Kitchen Orders <onboarding@resend.dev>",
-          to: ["you@gmail.com"], // Change to your real email
+
+        //  from: "Kitchen Orders <onboarding@resend.dev>",
+        //   to: ["you@gmail.com"], // Change to your real email
+
+
+              from: 'Acme <onboarding@resend.dev>',
+    to: ['delivered@resend.dev'],
           subject: `New Weekly Order #${newOrder.id} – Rs.${totalAmount}`,
           react: <OrderSummary order={newOrder} />,
         });
