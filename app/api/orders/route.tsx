@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const { accessCode, orders: orderList, totalAmount, phone, notes } = body;
 
   // 1. Access code
-  if (accessCode !== process.env.NEXT_PUBLIC_ACCESS_CODE) {
+  if (accessCode !== process.env.ACCESS_CODE) {
     return Response.json({ error: "Wrong access code" }, { status: 403 });
   }
 
