@@ -21,10 +21,12 @@ let db: ReturnType<typeof drizzle> | null = null;
 
 export function getDb() {
   if (!db) {
-    if (!process.env.DATABASE_URL) {
-      throw new Error("DATABASE_URL not set");
+    const url = process.env.DATABASE_URL;
+    if (!url) {
+      console.error("DATABASE_URL is missing! Check Railway variables.");
+      throw new Error("Database connection failed – missing DATABASE_URL");
     }
-    const sql = neon(process.env.DATABASE_URL);
+    const sql = neon(url);
     db = drizzle(sql, { schema });
   }
   return db;
