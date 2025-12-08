@@ -1,0 +1,4 @@
+front end finish
+now next db and  and telegram and resend
+maybe neon drizzle then ???
+maybe also add a quick password to accessing anything at all
