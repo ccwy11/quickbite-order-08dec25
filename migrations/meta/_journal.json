@@ -15,6 +15,20 @@
       "when": 1765081227169,
       "tag": "0001_vengeful_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765249366928,
+      "tag": "0002_worthless_gateway",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1765253606677,
+      "tag": "0003_remarkable_phil_sheldon",
+      "breakpoints": true
     }
   ]
 }

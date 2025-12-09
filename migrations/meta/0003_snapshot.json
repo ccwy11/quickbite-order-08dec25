@@ -1,0 +1,149 @@
+{
+  "id": "25cd449a-1aca-479a-b593-a1d6d78e783c",
+  "prevId": "f4ecd719-d914-43c6-9bae-9c2ef37c4104",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.menu_weeks": {
+      "name": "menu_weeks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "week_start_date": {
+          "name": "week_start_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "main_items": {
+          "name": "main_items",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "snacks": {
+          "name": "snacks",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[{\"name\":\"None\",\"price\":0},{\"name\":\"Samosa (2pcs)\",\"price\":120},{\"name\":\"Pakora Plate\",\"price\":150}]'::jsonb"
+        },
+        "eggs": {
+          "name": "eggs",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[{\"name\":\"None\",\"price\":0},{\"name\":\"Boiled Egg\",\"price\":40},{\"name\":\"Fried Egg\",\"price\":50},{\"name\":\"Omelette\",\"price\":80}]'::jsonb"
+        },
+        "appetizers": {
+          "name": "appetizers",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[{\"name\":\"None\",\"price\":0},{\"name\":\"Papadum\",\"price\":30},{\"name\":\"Onion Bhaji\",\"price\":90},{\"name\":\"Chicken Tikka (2pcs)\",\"price\":220}]'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.orders": {
+      "name": "orders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "delivery_week": {
+          "name": "delivery_week",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "main_items": {
+          "name": "main_items",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "choices": {
+          "name": "choices",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "total_amount": {
+          "name": "total_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'pending'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

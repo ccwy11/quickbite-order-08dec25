@@ -1,4 +1,4 @@
-import { pgTable, serial, timestamp, integer, jsonb, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, integer, jsonb, text, varchar, date } from "drizzle-orm/pg-core";
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),                  // Auto ID for each weekly batch
@@ -17,5 +17,29 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at").defaultNow(),
   status: varchar("status", { length: 20 }).default("pending"),
 });
+export const menuWeeks = pgTable("menu_weeks", {
+  id: serial("id").primaryKey(),
+  weekStartDate: date("week_start_date").notNull(), // e.g. "2025-04-07" (Monday)
+  mainItems: jsonb("main_items").notNull(), // [{name: "Chicken Biryani", price: 480}, ...]
+  snacks: jsonb("snacks").notNull().default([
+    { name: "None", price: 0 },
+    { name: "Samosa (2pcs)", price: 120 },
+    { name: "Pakora Plate", price: 150 },
+  ]),
+  eggs: jsonb("eggs").notNull().default([
+    { name: "None", price: 0 },
+    { name: "Boiled Egg", price: 40 },
+    { name: "Fried Egg", price: 50 },
+    { name: "Omelette", price: 80 },
+  ]),
+  appetizers: jsonb("appetizers").notNull().default([
+    { name: "None", price: 0 },
+    { name: "Papadum", price: 30 },
+    { name: "Onion Bhaji", price: 90 },
+    { name: "Chicken Tikka (2pcs)", price: 220 },
+  ]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 
 export type Order = typeof orders.$inferSelect;
