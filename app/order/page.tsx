@@ -1,53 +1,29 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format, addDays } from "date-fns";
 import { Loader2, Check, ArrowLeft } from "lucide-react";
 
-const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const deliveryDates = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i + 1));
+// FIXED: Dynamic day names based on actual delivery dates (not hardcoded "Monday")
+  const dayNames = deliveryDates.map(date => format(date, "EEEE")); // e.g. "Thursday" for Dec 11
 
-// Weekly main menu (5 items max per day)
-const weeklyMenu: { [key: string]: { name: string; price: number }[] } = {
-  Monday: [
-    { name: "Chicken Biryani", price: 480 },
-    { name: "Seekh Kebab", price: 350 },
-    { name: "Raita", price: 50 },
-    { name: "Salad", price: 70 },
-    { name: "Extra Rice", price: 100 },
-  ],
-  Tuesday: [
-    { name: "Mutton Karahi", price: 780 },
-    { name: "Butter Naan", price: 120 },
-    { name: "Yogurt Dip", price: 60 },
-    { name: "Green Chutney", price: 40 },
-    { name: "Lemon Wedges", price: 30 },
-  ],
-  // Add other days as needed...
-};
+  // FIXED: Map delivery date by index (real date for selected day)
+const getDeliveryDateByIndex = (idx: number) => deliveryDates[idx];
+  
+// Fetch the correct menu from DB at runtime
+async function getActiveMenu() {
+  const res = await fetch("/api/menu/active");
+  if (!res.ok) {
+    console.error("Failed to load menu");
+    return null;
+  }
+  return res.json();
+}
 
-// Extra choices (same for all days)
-const snacks = [
-  { name: "None", price: 0 },
-  { name: "Samosa (2pcs)", price: 120 },
-  { name: "Pakora Plate", price: 150 },
-  { name: "Spring Rolls", price: 180 },
-];
-
-const eggChoices = [
-  { name: "None", price: 0 },
-  { name: "Boiled Egg", price: 40 },
-  { name: "Fried Egg", price: 50 },
-  { name: "Omelette", price: 80 },
-];
-
-const appetizers = [
-  { name: "None", price: 0 },
-  { name: "Papadum", price: 30 },
-  { name: "Onion Bhaji", price: 90 },
-  { name: "Chicken Tikka (2pcs)", price: 220 },
-];
 
 export default function OrderPage() {
   const [step, setStep] = useState<"days" | "order" | "summary">("days");
@@ -56,6 +32,10 @@ export default function OrderPage() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+// Active menu from DB
+  const [activeMenu, setActiveMenu] = useState<any>(null);
+  const [loadingMenu, setLoadingMenu] = useState(true);
 
   // Cart: one object per day
   const [dayOrders, setDayOrders] = useState<{
@@ -66,13 +46,43 @@ export default function OrderPage() {
       appetizer: string;
     };
   }>({});
+  
+ // Load menu on mount (unchanged)
+  useEffect(() => {
+    fetch("/api/menu/active")
+      .then(res => res.json())
+      .then((menu) => {
+        setActiveMenu(menu);
+        setLoadingMenu(false);
+      })
+      .catch(err => {
+        console.error("Menu load failed:", err);
+        setLoadingMenu(false);
+      });
+  }, []);
 
-  const currentMainMenu = weeklyMenu[selectedDay] || [];
+  if (loadingMenu) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="animate-spin text-green-600" size={48} />
+        <p className="ml-4 text-xl">Loading this week's menu...</p>
+      </div>
+    );
+  }
+
+
+
+  // Get menu for selected day
+  const currentMainMenu = activeMenu?.mainItems || [];
+  const currentSnacks = activeMenu?.snacks || [];
+  const currentEggs = activeMenu?.eggs || [];
+  const currentAppetizers = activeMenu?.appetizers || [];
+
   const currentOrder = dayOrders[selectedDay] || {
-    main: currentMainMenu.map(m => ({ ...m, qty: 0 })),
-    snacks: "None",
-    egg: "None",
-    appetizer: "None",
+    main: currentMainMenu.map((m: unknown) => ({ ...m, qty: 0 })),
+    snacks: currentSnacks[0] || "None",
+    egg: currentEggs[0] || "None",
+    appetizer: currentAppetizers[0] || "None",
   };
 
   const updateMainQty = (name: string, delta: number) => {
@@ -92,9 +102,9 @@ export default function OrderPage() {
 
   const grandTotal = Object.values(dayOrders).reduce((sum, day) => {
     const mainTotal = day.main.reduce((s, i) => s + i.price * i.qty, 0);
-    const snackPrice = snacks.find(s => s.name === day.snacks)?.price || 0;
-    const eggPrice = eggChoices.find(e => e.name === day.egg)?.price || 0;
-    const appPrice = appetizers.find(a => a.name === day.appetizer)?.price || 0;
+    const snackPrice = currentSnacks.find((s:unknown) => s.name === day.snacks)?.price || 0;
+    const eggPrice = currentEggs.find((e:unknown) => e.name === day.egg)?.price || 0;
+    const appPrice = currentAppetizers.find((a:unknown) => a.name === day.appetizer)?.price || 0;
     return sum + mainTotal + snackPrice + eggPrice + appPrice;
   }, 0);
 
@@ -104,16 +114,9 @@ export default function OrderPage() {
   // Build clean array of orders with VALID Date objects
   const ordersToSend = Object.entries(dayOrders).flatMap(([dayName, dayOrder]) => {
       const dayIndex = dayNames.findIndex(d => d === dayName);
-    const deliveryDate = deliveryDates[dayIndex]; // ← this is a real Date object
+    const deliveryDate = getDeliveryDateByIndex(dayIndex); // FIXED: Real date
 
-    const mainTotal = dayOrder.main
-      .filter(i => i.qty > 0)
-      .reduce((sum, i) => sum + i.price * i.qty, 0);
-const extrasTotal =
-      (snacks.find(s => s.name === dayOrder.snacks)?.price || 0) +
-      (eggChoices.find(e => e.name === dayOrder.egg)?.price || 0) +
-    (appetizers.find(a => a.name === dayOrder.appetizer)?.price || 0);
-      
+
     return [{
    dayName,
       deliveryDate: deliveryDate.toISOString(),
@@ -121,11 +124,11 @@ const extrasTotal =
       snacks: dayOrder.snacks,
       egg: dayOrder.egg,
       appetizer: dayOrder.appetizer,
-      dayTotal: mainTotal + extrasTotal,
+      // dayTotal: mainTotal + extrasTotal,
     }];
   });
 
-  const grandTotal = ordersToSend.reduce((sum, o) => sum + o.dayTotal, 0);
+  // const grandTotal = ordersToSend.reduce((sum, o) => sum + o.dayTotal, 0);
 
   const res = await fetch("/api/orders", {
     method: "POST",
@@ -147,7 +150,9 @@ const data = await res.json();
     setTimeout(() => location.reload(), 3000);
   }
   setSubmitting(false);
-};
+    };
+  
+
   // SUMMARY STEP
   if (step === "summary") {
     return (
@@ -179,7 +184,7 @@ const data = await res.json();
           <textarea placeholder="Notes for the week" value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full p-4 border rounded-xl" />
 
           <div className="bg-green-500 text-white p-6 rounded-2xl text-center">
-            <p className="text-4xl font-bold">Rs. {grandTotal}</p>
+            <p className="text-4xl font-bold">HKD {grandTotal}</p>
           </div>
 
           <button onClick={submitAll} disabled={submitting || grandTotal === 0}
@@ -205,18 +210,21 @@ const data = await res.json();
           {/* Main Items */}
           <div className="bg-white rounded-2xl p-6 shadow space-y-4">
             <h3 className="font-bold text-lg mb-3">Main Items</h3>
-            {currentMainMenu.map(m => {
-              const item = currentOrder.main.find(i => i.name === m.name) || { ...m, qty: 0 };
+            {currentMainMenu.map((item: any, index: number) => {
+          const cartItem = currentOrder.main.find((i: any) => i.name === item.name) || { ...item, qty: 0 };  
+            
+            {/* {currentMainMenu.map(m => {
+              const item = currentOrder.main.find(i => i.name === m.name) || { ...m, qty: 0 }; */}
               return (
-                <div key={m.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
+                <div key={item.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
                   <div>
-                    <p className="font-medium">{m.name}</p>
-                    <p className="text-sm text-gray-600">Rs.{m.price}</p>
+                    <p className="font-medium">{item.name}</p>
+                    <p className="text-sm text-gray-600">Rs.{item.price}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button onClick={() => updateMainQty(m.name, -1)} className="w-10 h-10 rounded-full bg-gray-300">−</button>
-                    <span className="w-12 text-center font-bold text-lg">{item.qty}</span>
-                    <button onClick={() => updateMainQty(m.name, 1)} className="w-10 h-10 rounded-full bg-green-500 text-white">+</button>
+                    <button onClick={() => updateMainQty(item.name, -1)} className="w-10 h-10 rounded-full bg-gray-300">−</button>
+                    <span className="w-12 text-center font-bold text-lg">{cartItem.qty}</span>
+                    <button onClick={() => updateMainQty(item.name, 1)} className="w-10 h-10 rounded-full bg-green-500 text-white">+</button>
                   </div>
                 </div>
               );
@@ -226,11 +234,11 @@ const data = await res.json();
           {/* Snacks */}
           <div className="bg-white rounded-2xl p-6 shadow">
             <h3 className="font-bold text-lg mb-4">Snacks Choice</h3>
-            {snacks.map(s => (
-              <label key={s.name} className="flex items-center justify-between p-4 border-b last:border-0">
-                <span>{s.name} {s.price > 0 && `(+Rs.${s.price})`}</span>
-                <input type="radio" name="snacks" checked={currentOrder.snacks === s.name}
-                  onChange={() => setDayOrders({ ...dayOrders, [selectedDay]: { ...currentOrder, snacks: s.name } })} />
+            {currentSnacks.map((s:string) => (
+              <label key={s} className="flex items-center justify-between p-4 border-b last:border-0">
+                <span>{s} </span>
+                <input type="radio" name="snacks" checked={currentOrder.snacks === s}
+                  onChange={() => setDayOrders({ ...dayOrders, [selectedDay]: { ...currentOrder, snacks: s } })} />
               </label>
             ))}
           </div>
@@ -238,11 +246,11 @@ const data = await res.json();
           {/* Egg */}
           <div className="bg-white rounded-2xl p-6 shadow">
             <h3 className="font-bold text-lg mb-4">Egg Choice</h3>
-            {eggChoices.map(e => (
-              <label key={e.name} className="flex items-center justify-between p-4 border-b last:border-0">
-                <span>{e.name} {e.price > 0 && `(+Rs.${e.price})`}</span>
-                <input type="radio" name="egg" checked={currentOrder.egg === e.name}
-                  onChange={() => setDayOrders({ ...dayOrders, [selectedDay]: { ...currentOrder, egg: e.name } })} />
+            {currentEggs.map((e:string) => (
+              <label key={e} className="flex items-center justify-between p-4 border-b last:border-0">
+                <span>{e} </span>
+                <input type="radio" name="egg" checked={currentOrder.egg === e}
+                  onChange={() => setDayOrders({ ...dayOrders, [selectedDay]: { ...currentOrder, egg: e} })} />
               </label>
             ))}
           </div>
@@ -250,11 +258,11 @@ const data = await res.json();
           {/* Appetizer */}
           <div className="bg-white rounded-2xl p-6 shadow">
             <h3 className="font-bold text-lg mb-4">Appetizer Choice</h3>
-            {appetizers.map(a => (
-              <label key={a.name} className="flex items-center justify-between p-4 border-b last:border-0">
-                <span>{a.name} {a.price > 0 && `(+Rs.${a.price})`}</span>
-                <input type="radio" name="app" checked={currentOrder.appetizer === a.name}
-                  onChange={() => setDayOrders({ ...dayOrders, [selectedDay]: { ...currentOrder, appetizer: a.name } })} />
+            {currentAppetizers.map((a:string)=> (
+              <label key={a} className="flex items-center justify-between p-4 border-b last:border-0">
+                <span>{a}</span>
+                <input type="radio" name="app" checked={currentOrder.appetizer === a}
+                  onChange={() => setDayOrders({ ...dayOrders, [selectedDay]: { ...currentOrder, appetizer: a } })} />
               </label>
             ))}
           </div>
@@ -273,8 +281,10 @@ const data = await res.json();
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-md mx-auto space-y-6">
         <h1 className="text-3xl font-bold text-green-600 text-center">Weekly Order</h1>
-        <p className="text-center text-gray-600">Tap a day to build your order</p>
-
+        {/* <p className="text-center text-gray-600">Tap a day to build your order</p> */}
+<p className="text-center text-gray-600">
+          Menu for week starting <strong>{activeMenu ? format(new Date(activeMenu.weekStartDate), "dd MMM yyyy") : "..."}</strong>
+        </p>
         {dayNames.map((day, idx) => (
           <button
             key={day}

@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     for (const [weekIso, items] of Object.entries(menuData)) {
       const cleanItems = (items as string[])
         .filter(Boolean)
-        .map(name => ({ name, price: 0 })); // price not used
+        .map(name => ({ name})); // price not used
 
       await db
         .insert(menuWeeks)
