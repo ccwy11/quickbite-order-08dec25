@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { accessCode, orders: orderList, totalAmount, phone, notes } = body;
+    const { accessCode, orders: orderList, phone, notes } = body;
 
     // 1. Access code
     if (accessCode !== process.env.ACCESS_CODE) {
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
             },
           ])
         ),
-        totalAmount,
+        // totalAmount,
         phone,
         notes: notes || null,
       })
@@ -79,8 +79,10 @@ export async function POST(req: NextRequest) {
 
 
               from: 'Acme <onboarding@resend.dev>',
-    to: ['delivered@resend.dev'],
-          subject: `New Weekly Order #${newOrder.id} – Rs.${totalAmount}`,
+          to: ['delivered@resend.dev'],
+    //                   from: 'orders <order@notification.altertechdesign.com>',
+    // to: ['ccwy1120@hotmail.com'],
+          subject: `New Weekly Order #${newOrder.id} – `,
           react: <OrderSummary order={newOrder} />,
         });
 

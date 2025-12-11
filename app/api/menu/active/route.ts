@@ -4,6 +4,7 @@ import { getDb } from "@/db/drizzle";
 import { menuWeeks } from "@/db/schema";
 import { startOfWeek, addWeeks, isAfter } from "date-fns";
 import { eq } from "drizzle-orm";
+import next from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,8 @@ export async function GET() {
   const nextMonday = addWeeks(thisMonday, 1);
 
   // Show NEXT week menu until Sunday night
-  const targetMonday = isAfter(now, thisMonday) ? nextMonday : thisMonday;
+    const targetMonday =nextMonday;
+      //isAfter(now, thisMonday) ? nextMonday : thisMonday;
       const result = await db
     .select()
     .from(menuWeeks)

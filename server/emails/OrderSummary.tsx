@@ -7,7 +7,7 @@ import { format } from "date-fns";
 interface OrderFromDB {
   id: number;
   deliveryWeek: string | Date;
-  totalAmount: number;
+  // totalAmount: number;
   phone: string;
   notes: string | null;
   mainItems: { day: string; items: { name: string; qty: number; price: number }[] }[];
@@ -19,7 +19,8 @@ interface OrderFromDB {
 
 // 2. Use it here – no more :any!
 export default function OrderSummary({ order }: { order: OrderFromDB }) {
-  const { mainItems, choices, totalAmount, phone, notes, deliveryWeek } = order;
+  const { mainItems, choices, phone, notes, deliveryWeek } = order;
+    // const { mainItems, choices, totalAmount, phone, notes, deliveryWeek } = order;
 
   return (
     <Html>
@@ -43,7 +44,7 @@ export default function OrderSummary({ order }: { order: OrderFromDB }) {
               {dayData.items.map((item, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
                   <Text style={{ margin: 0 }}>{item.name} × {item.qty}</Text>
-                  <Text style={{ margin: 0, fontWeight: "bold" }}>Rs.{item.price * item.qty}</Text>
+                  {/* <Text style={{ margin: 0, fontWeight: "bold" }}>Rs.{item.price * item.qty}</Text> */}
                 </div>
               ))}
 
@@ -58,9 +59,9 @@ export default function OrderSummary({ order }: { order: OrderFromDB }) {
           <Hr style={{ borderColor: "#e5e7eb", margin: "32px 0" }} />
 
           <div style={{ textAlign: "right" }}>
-            <Text style={{ fontSize: "28px", fontWeight: "bold", color: "#00C48C" }}>
+            {/* <Text style={{ fontSize: "28px", fontWeight: "bold", color: "#00C48C" }}>
               Total: Rs.{totalAmount}
-            </Text>
+            </Text> */}
             <Text style={{ color: "#6b7280" }}>
               Phone: {phone} {notes && `• Note: "${notes}"`}
             </Text>

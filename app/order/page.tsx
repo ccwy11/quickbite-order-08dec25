@@ -13,6 +13,9 @@ const deliveryDates = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i 
 
   // FIXED: Map delivery date by index (real date for selected day)
 const getDeliveryDateByIndex = (idx: number) => deliveryDates[idx];
+
+
+
   
 // Fetch the correct menu from DB at runtime
 async function getActiveMenu() {
@@ -70,6 +73,14 @@ export default function OrderPage() {
     );
   }
 
+// Generate correct dates from activeMenu.weekStartDate
+const menuWeekStart = activeMenu?.weekStartDate ? new Date(activeMenu.weekStartDate) : null;
+const weekDeliveryDates = menuWeekStart
+  ? Array.from({ length: 7 }, (_, i) => addDays(menuWeekStart, i))
+  : [];
+
+// Fixed day names from the actual week
+const weekDayNames = weekDeliveryDates.map(date => format(date, "EEEE"));
 
 
   // Get menu for selected day
@@ -152,6 +163,8 @@ const data = await res.json();
   setSubmitting(false);
     };
   
+  
+  
 
   // SUMMARY STEP
   if (step === "summary") {
@@ -169,7 +182,7 @@ const data = await res.json();
               {order.main.filter(i => i.qty > 0).map(i => (
                 <div key={i.name} className="flex justify-between text-gray-700">
                   <span>{i.name} × {i.qty}</span>
-                  <span>Rs.{i.price * i.qty}</span>
+                  {/* <span>Rs.{i.price * i.qty}</span> */}
                 </div>
               ))}
               <div className="mt-3 text-sm text-gray-600 border-t pt-3">
@@ -199,6 +212,7 @@ const data = await res.json();
 
   // ORDER PER DAY STEP
   if (step === "order") {
+    
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-md mx-auto space-y-6">
@@ -219,7 +233,7 @@ const data = await res.json();
                 <div key={item.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
                   <div>
                     <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-gray-600">Rs.{item.price}</p>
+                    {/* <p className="text-sm text-gray-600">Rs.{item.price}</p> */}
                   </div>
                   <div className="flex items-center gap-3">
                     <button onClick={() => updateMainQty(item.name, -1)} className="w-10 h-10 rounded-full bg-gray-300">−</button>
@@ -277,40 +291,57 @@ const data = await res.json();
   }
 
   // DAY SELECTION
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-md mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-green-600 text-center">Weekly Order</h1>
-        {/* <p className="text-center text-gray-600">Tap a day to build your order</p> */}
-<p className="text-center text-gray-600">
-          Menu for week starting <strong>{activeMenu ? format(new Date(activeMenu.weekStartDate), "dd MMM yyyy") : "..."}</strong>
+ return (
+  <div className="min-h-screen bg-gray-50 p-6">
+    <div className="max-w-md mx-auto space-y-6">
+      <h1 className="text-3xl font-bold text-green-600 text-center">Weekly Order</h1>
+
+      {activeMenu ? (
+        <p className="text-center text-gray-600">
+          Menu for week starting{" "}
+          <strong>{format(new Date(activeMenu.weekStartDate), "dd MMM yyyy")}</strong>
         </p>
-        {dayNames.map((day, idx) => (
+      ) : (
+        <p className="text-center text-gray-600">Loading menu...</p>
+      )}
+
+      {/* FIXED: Buttons now match the menu week */}
+      {weekDayNames.map((day, idx) => {
+        const deliveryDate = weekDeliveryDates[idx];
+        
+
+        return (
           <button
             key={day}
-            onClick={() => { setSelectedDay(day); setStep("order"); }}
+            onClick={() => {
+              setSelectedDay(day);
+              setStep("order");
+            }}
             className="w-full bg-white rounded-2xl p-6 shadow text-left flex justify-between items-center"
           >
             <div>
               <p className="font-bold text-lg">{day}</p>
-              <p className="text-gray-600">{format(deliveryDates[idx], "dd MMM yyyy")}</p>
+              <p className="text-gray-600">{format(deliveryDate, "dd MMM yyyy")}</p>
             </div>
             {dayOrders[day] ? (
-              <span className="bg-green-100 text-green-600 px-4 py-2 rounded-full text-sm font-medium">Done</span>
+              <span className="bg-green-100 text-green-600 px-4 py-2 rounded-full text-sm font-medium">
+                Done
+              </span>
             ) : (
               <span className="text-gray-400">→</span>
             )}
           </button>
-        ))}
+        );
+      })}
 
-        <button
-          onClick={() => setStep("summary")}
-          disabled={!Object.keys(dayOrders).length}
-          className="w-full bg-green-600 disabled:bg-gray-300 text-white py-6 rounded-2xl text-xl font-bold"
-        >
-          Review & Submit All
-        </button>
-      </div>
+      <button
+        onClick={() => setStep("summary")}
+        disabled={!Object.keys(dayOrders).length}
+        className="w-full bg-green-600 disabled:bg-gray-300 text-white py-6 rounded-2xl text-xl font-bold"
+      >
+        Review & Submit All
+      </button>
     </div>
-  );
+  </div>
+);
 }
